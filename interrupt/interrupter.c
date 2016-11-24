@@ -14,6 +14,23 @@
 #include <asm/io.h>
 #include <asm/uaccess.h>
 #include <linux/delay.h>
+
+//定义定时器结构体
+struct timer_list my_timer;
+//循环调用结构体
+
+//定时器时间到后执行的函数
+void my_timer_func(unsigned long data)
+{
+	printk("welcome to timer\n");
+	
+	mod_timer(&my_timer,jiffies + 2*HZ);
+ //mod_timer(timer, expires) is equivalent to:
+ //												 del_timer(timer); timer->expires = expires; add_timer(timer);
+	printk("timer over\n");
+
+}
+
 //定义等待结构体队列
 struct work_struct my_queue;
 //定义一个下半部函数
@@ -49,11 +66,18 @@ int my_probe(struct platform_device *dev){
 	}
 	//初始化等待队列和把绑定函数
 	INIT_WORK(&my_queue,my_queue_func);
+//初始化结构体
+	 init_timer(&my_timer);
+	 my_timer.expires=jiffies + HZ;
+	 my_timer.function=my_timer_func;
+//调用结构体
+	add_timer(&my_timer);
 
 	return 0;
 }
 
 int my_remove(struct platform_device *dev){
+	del_timer(&my_timer);
 	free_irq(psource->start,NULL);
 	return 0;
 }
