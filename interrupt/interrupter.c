@@ -14,9 +14,19 @@
 #include <asm/io.h>
 #include <asm/uaccess.h>
 #include <linux/delay.h>
+//定义等待结构体队列
+struct work_struct my_queue;
+//定义一个下半部函数
+void my_queue_func(struct work_struct *my_wq){
+	printk("welcome to work queue \n");
+	ssleep(10);
+	printk("thank you!\n");
+}
+//在上半部函数中调用下半部函数
 struct resource *psource=NULL;
 irqreturn_t my_handler(int dev, void *name){
 	printk("come to interrupte\n");
+	schedule_work(&my_queue);
 	printk("psource->start=%d,psource->name=%s,psource->flags=%lu\n",psource->start,psource->name,psource->flags);
 	return IRQ_HANDLED;
 }
@@ -37,6 +47,9 @@ int my_probe(struct platform_device *dev){
 		printk("request error\n");
 		return -1;
 	}
+	//初始化等待队列和把绑定函数
+	INIT_WORK(&my_queue,my_queue_func);
+
 	return 0;
 }
 
