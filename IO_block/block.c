@@ -9,6 +9,8 @@
 #include<errno.h>
 #include <unistd.h>
 #include<string.h>
+#include <fcntl.h>
+#include<stdlib.h>
 #define BUF_SIZE 20
 int main()
 {
@@ -16,6 +18,8 @@ int main()
 	int ret = 0;
 	int flags = 0 ;
 	printf("stdin : %d\n",STDIN_FILENO);
+	flags = fcntl(STDIN_FILENO,F_GETFL);
+	fcntl(STDIN_FILENO,F_SETFL,flags | O_NONBLOCK);
 	ret = read(STDIN_FILENO,buf,BUF_SIZE);
 	printf("read after ret = %d\n",ret);
 	if(ret <0){
