@@ -11,6 +11,7 @@
 #include<unistd.h>
 #include <sys/socket.h>
 #include<strings.h>
+#include<string.h>
 #define BUF_SIZE  30
 int main(){
 	int fs=0;
@@ -20,7 +21,7 @@ int main(){
 	bzero(&my_addr,sizeof(my_addr));
 	my_addr.sin_family = AF_INET;
 	my_addr.sin_port = htons(9000);
-	ret = inet_pton(AF_INET,"127.0.0.10",&my_addr.sin_addr);
+	ret = inet_pton(AF_INET,"127.0.0.9",&my_addr.sin_addr);
 	if(ret <0)
 	{
 		perror("inet_pton:\n");
@@ -39,14 +40,15 @@ int main(){
 		return -1;
 	}
 	while(1){
-			sleep(1);
-		ret = recv(fs,buf,BUF_SIZE,MSG_DONTWAIT);
+		sleep(1);
+		strcpy(buf,"test ok !");
+		ret = send(fs,buf,strlen(buf),MSG_DONTWAIT);
 		if(ret<0)
 		{
 			perror("recv : \n");
 			break;
 		}
-		printf("ret =%d\t,recv : %s\n",ret,buf);
+		bzero(buf,BUF_SIZE);
 
 	}
 	close(fs);

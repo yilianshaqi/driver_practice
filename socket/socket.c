@@ -44,7 +44,7 @@ int main()
 	bzero(&my_add,sizeof(my_add));
 	my_add.sin_family = AF_INET;
 	my_add.sin_port = htons(9000);
-	ret = inet_pton(AF_INET,"127.0.0.10",&my_add.sin_addr);
+	ret = inet_pton(AF_INET,"127.0.0.9",&my_add.sin_addr);
 	if(ret <=0 )
 	{
 		if (ret == 0)
@@ -72,23 +72,61 @@ int main()
 	
 	//接收socket连接
 	printf("accept before\n");
-	rfs = accept(fs,&recvaddr,&length);
-	printf("accept after\n");
-	if(rfs<0)
+	fd_set set;
+	FD_ZERO(&set);
+	printf("FD_SET SIZE:%d\n",sizeof(fd_set));
+	FD_SET(fs,&set);
+	int max=fs;
+	fd_set myset;
+	FD_ZERO(&myset);
+	while(1)
 	{
-		perror("accept error\n");
-		return -1;
-	}
-	//读写操作
-	while(i--){
+		myset=set;
+		ret = select(max+1,&myset,NULL,NULL,NULL);
+		if(ret<0)
+		{
+			perror("select error:\n");
+			return 0;
+		}
+		if(ret>0)
+		{
+			for(int i=0;i<max+1;i++)
+			{
+				if(FD_ISSET(i,&myset))
+				{
+					if(i==fs)
+					{
+						rfs = accept(fs,&recvaddr,&length);
+						if(rfs<0)
+						{
+							perror("accept error\n");
+							return -1;
+						}
+						FD_SET(rfs,&set);
+						if(max<rfs)
+						{
+							max=rfs;
+						}
+					}
+					else{
+						ret = read(i,buf,BUF_SIZE);
+						if(ret <=0)
+						{
+							close(i);
+							FD_CLR(i,&set);
+						}
+						printf("ret = %d\t,read:%s\n",ret,buf);
+						bzero(buf,BUF_SIZE);
+					}
+				}
+			}
 
-		sprintf(buf,"socket test ok!%d",i);
-		ret = send(rfs,buf,BUF_SIZE,0);
-		bzero(buf,BUF_SIZE);
-		printf("ret =%d\n",ret);
-		sleep(3);
+		}
 	}
 	//断开连接
-	close(fs);
-	close(rfs);
+	for(int i=0;i<=max;i++)
+	{
+		close(i);
+	}
+	return 0;
 }
