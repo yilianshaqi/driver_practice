@@ -86,7 +86,7 @@ int main()
 		if(ret<0)
 		{
 			perror("select error:\n");
-			return 0;
+			break;
 		}
 		if(ret>0)
 		{
@@ -100,13 +100,10 @@ int main()
 						if(rfs<0)
 						{
 							perror("accept error\n");
-							return -1;
+							break;
 						}
 						FD_SET(rfs,&set);
-						if(max<rfs)
-						{
-							max=rfs;
-						}
+						max = max>rfs?max:rfs;
 					}
 					else{
 						ret = read(i,buf,BUF_SIZE);
@@ -114,6 +111,7 @@ int main()
 						{
 							close(i);
 							FD_CLR(i,&set);
+							break;
 						}
 						printf("ret = %d\t,read:%s\n",ret,buf);
 						bzero(buf,BUF_SIZE);
