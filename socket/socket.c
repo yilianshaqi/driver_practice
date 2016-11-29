@@ -10,10 +10,13 @@
  #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <signal.h>
 #include<stdio.h>
+ #include <poll.h>
+ #include <string.h>
 #define BUF_SIZE 30
 #define COUNT 5
-#include <signal.h>
+#define SET_SIZE 20
 void handler(int signum)
 {
 	printf("signal is :sigpipe,num=%d\n",signum);
@@ -72,7 +75,7 @@ int main()
 	
 	//接收socket连接
 	printf("accept before\n");
-	fd_set set;
+/*	fd_set set;
 	FD_ZERO(&set);
 	printf("FD_SET SIZE:%d\n",sizeof(fd_set));
 	FD_SET(fs,&set);
@@ -121,10 +124,63 @@ int main()
 
 		}
 	}
+*/
+
+	struct pollfd  set[SET_SIZE];
+	int max=0;
+	set[0].fd=fs;
+	memset(set,-1,SET_SIZE);
+	set[0].events=POLLRDNORM;
+	max=1;
+	while(1)
+	{
+		ret = poll(set,max,-1);
+		if(ret <0)
+		{
+			perror("poll:\n");
+			break;
+		}
+		for(int i=0;i<max;i++)
+		{
+			if(set[i].revents &POLLRDNORM)
+			{
+				if(set[i].fd == fs)
+				{
+					set[i].revents = 0;
+					rfs = accept(fs,&recvaddr,&length);
+					for(int j=0;j<SET_SIZE;j++)
+					{
+						if(set[j].fd==-1)
+						{
+							set[j].fd = rfs;
+							max++;
+							set[j].events = POLLRDNORM;
+							break;
+						}
+					}
+					break;
+				}
+				else{
+					set[i].revents =0;
+					ret = recv(set[i].fd,buf,BUF_SIZE,0);
+					if(ret<=0)
+					{
+						set[i].fd = -1;
+						set[i].events =-1;
+						set[i].revents = -1;
+						perror("recv :\n");
+							break;
+					}
+					printf("ret = %d,read :%s\n",ret,buf);
+					bzero(buf,BUF_SIZE);
+				}
+			}
+		}
+	}
 	//断开连接
 	for(int i=0;i<=max;i++)
 	{
-		close(i);
+		close(set[i].fd);
 	}
 	return 0;
 }
