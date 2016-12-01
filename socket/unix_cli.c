@@ -22,25 +22,28 @@ int main(){
 	bzero(&my_addr,sizeof(my_addr));
 	my_addr.sun_family = PF_LOCAL;
 	strcpy(my_addr.sun_path,name);
-	fs = socket(PF_LOCAL,SOCK_STREAM,0);
+//	fs = socket(PF_LOCAL,SOCK_STREAM,0);
+	fs = socket(PF_LOCAL,SOCK_DGRAM,0);
 	if(fs<=0)
 	{
 		perror("socket :\n");
 		return -1;
 	}
-	ret = connect(fs,(struct sockaddr *)&my_addr,sizeof(my_addr));
+/*	ret = connect(fs,(struct sockaddr *)&my_addr,sizeof(my_addr));
 	if(ret<0)
 	{
 		perror("connect :\n");
 		return -1;
-	}
+	}  */
 	int i=10;
 	while(i){
 		sleep(1);
 		strcpy(buf,"test ok !");
-		ret = send(fs,buf,strlen(buf),MSG_DONTWAIT);
+//		ret = send(fs,buf,strlen(buf),0);
+		ret = sendto(fs,buf,strlen(buf),0,(struct sockaddr *)&my_addr,sizeof(my_addr));
 		if(ret<0)
 		{
+			printf("ret =%d\n",ret);
 			perror("recv : \n");
 			break;
 		}
