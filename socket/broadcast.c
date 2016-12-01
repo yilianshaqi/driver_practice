@@ -13,7 +13,7 @@
 #include <unistd.h>
 #define  PORT  9999
 #define BUF_SIZE 30
-const char ip[]="192.168.1.255";
+const char ip[]="224.0.0.9";
 int main()
 {
 	int fd = socket(AF_INET,SOCK_DGRAM,0);
@@ -22,13 +22,14 @@ int main()
 		perror("socket error:\n");
 		return -1;
 	}
-	int on = 1;
-	int ret = setsockopt(fd,SOL_SOCKET,SO_BROADCAST,&on,sizeof(on));
-	if(ret<0)
-	{
-		perror("setsockopt error\n");
-		return -1;
-	}
+	int ret;
+//	int on = 1;
+//	int ret = setsockopt(fd,SOL_SOCKET,SO_BROADCAST,&on,sizeof(on));
+//	if(ret<0)
+//	{
+//		perror("setsockopt error\n");
+//		return -1;
+//	}
 	struct sockaddr_in bcaddr;
 	bzero(&bcaddr,sizeof(bcaddr));
 	bcaddr.sin_family=AF_INET;
